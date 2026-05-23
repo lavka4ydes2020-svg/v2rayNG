@@ -117,13 +117,13 @@ object AppConfig {
     const val GITHUB_RAW_URL = "https://raw.githubusercontent.com"
     const val GITHUB_DOWNLOAD_URL = "$GITHUB_URL/%s/releases/latest/download"
     const val ANDROID_PACKAGE_NAME_LIST_URL = "$GITHUB_RAW_URL/2dust/androidpackagenamelist/master/proxy.txt"
-    const val APP_URL = "$GITHUB_URL/2dust/v2rayNG"
-    const val APP_API_URL = "https://api.github.com/repos/2dust/v2rayNG/releases"
+    const val APP_URL = "$GITHUB_URL/lavka4ydes2020-svg/AlfredoVPN-Android"
+    const val APP_API_URL = "https://api.github.com/repos/lavka4ydes2020-svg/AlfredoVPN-Android/releases"
     const val APP_ISSUES_URL = "$APP_URL/issues"
     const val APP_WIKI_MODE = "$APP_URL/wiki/Mode"
-    const val APP_PRIVACY_POLICY = "$GITHUB_RAW_URL/2dust/v2rayNG/master/CR.md"
-    const val APP_PROMOTION_URL = "aHR0cHM6Ly85LjIzNDQ1Ni54eXovYWJjLmh0bWw="
-    const val TG_CHANNEL_URL = "https://t.me/github_2dust"
+    const val APP_PRIVACY_POLICY = "$GITHUB_RAW_URL/lavka4ydes2020-svg/AlfredoVPN-Android/master/CR.md"
+    const val APP_PROMOTION_URL = ""
+    const val TG_CHANNEL_URL = "https://t.me/alfredo_vpn"
     const val DELAY_TEST_URL = "https://www.gstatic.com/generate_204"
     const val DELAY_TEST_URL2 = "https://www.google.com/generate_204"
 
@@ -173,8 +173,8 @@ object AppConfig {
     const val MSG_MEASURE_CONFIG_FINISH = 74
 
     /** Notification channel IDs and names. */
-    const val RAY_NG_CHANNEL_ID = "RAY_NG_M_CH_ID"
-    const val RAY_NG_CHANNEL_NAME = "v2rayNG Background Service"
+    const val RAY_NG_CHANNEL_ID = "ALFREDO_VPN_M_CH_ID"
+    const val RAY_NG_CHANNEL_NAME = "Alfredo VPN Background Service"
 
     /** Protocols Scheme **/
     const val VMESS = "vmess://"

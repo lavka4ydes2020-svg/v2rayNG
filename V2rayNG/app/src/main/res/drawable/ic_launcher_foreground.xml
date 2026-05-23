@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Shield background -->
+    <path
+        android:fillColor="#CE93D8"
+        android:pathData="M54,12L16,28v20c0,24 16,44 38,48c22,-4 38,-24 38,-48V28L54,12z" />
+    <!-- Inner lighter shield -->
+    <path
+        android:fillColor="#F3E5F5"
+        android:pathData="M54,20L24,32v16c0,20 13,36 30,40c17,-4 30,-20 30,-40V32L54,20z" />
+    <!-- Checkmark symbol -->
+    <path
+        android:fillColor="#CE93D8"
+        android:strokeColor="#CE93D8"
+        android:strokeWidth="3"
+        android:fillAlpha="0"
+        android:pathData="M38,54l11,11l21,-21" />
+</vector>

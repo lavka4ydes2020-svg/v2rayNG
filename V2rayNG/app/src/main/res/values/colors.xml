@@ -2,24 +2,24 @@
 <resources>
     <color name="colorPing">#009966</color>
     <color name="colorPingRed">#FF0099</color>
-    <color name="colorConfigType">#f97910</color>
+    <color name="colorConfigType">#CE93D8</color>
     <color name="colorWhite">#FFFFFF</color>
-    <color name="color_fab_active">#f97910</color>
+    <color name="color_fab_active">#CE93D8</color>
     <color name="color_fab_inactive">#9C9C9C</color>
     <color name="divider_color_light">#E0E0E0</color>
     <color name="colorIndicator">@color/md_theme_primary</color>
 
-    <!-- Primary colors - main tone: black -->
+    <!-- Primary colors - main tone: dark -->
     <color name="md_theme_primary">#000000</color>
     <color name="md_theme_onPrimary">#FFFFFF</color>
     <color name="md_theme_primaryContainer">#E0E0E0</color>
     <color name="md_theme_onPrimaryContainer">#000000</color>
 
-    <!-- Secondary colors - accent color: orange -->
-    <color name="md_theme_secondary">#f97910</color>
-    <color name="md_theme_onSecondary">#FFFFFF</color>
-    <color name="md_theme_secondaryContainer">#FFE8D6</color>
-    <color name="md_theme_onSecondaryContainer">#2B1700</color>
+    <!-- Secondary colors - accent color: soft lilac/purple -->
+    <color name="md_theme_secondary">#CE93D8</color>
+    <color name="md_theme_onSecondary">#000000</color>
+    <color name="md_theme_secondaryContainer">#F3E5F5</color>
+    <color name="md_theme_onSecondaryContainer">#2D0033</color>
 
     <!-- Tertiary colors - accent color: green -->
     <color name="md_theme_tertiary">#009966</color>
@@ -50,7 +50,7 @@
     <color name="md_theme_outlineVariant">#CAC4D0</color>
 
     <!-- Other colors -->
-    <color name="md_theme_inversePrimary">#C0C0C0</color>
+    <color name="md_theme_inversePrimary">#CE93D8</color>
     <color name="md_theme_shadow">#000000</color>
     <color name="md_theme_surfaceTint">#000000</color>
     <color name="md_theme_scrim">#000000</color>

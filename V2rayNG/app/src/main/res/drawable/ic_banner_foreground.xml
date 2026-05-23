@@ -1,0 +1,19 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="192dp"
+    android:height="192dp"
+    android:viewportWidth="192"
+    android:viewportHeight="192">
+    <!-- Shield -->
+    <path
+        android:fillColor="#CE93D8"
+        android:pathData="M96,20L28,44v36c0,42 28,76 68,84c40,-8 68,-42 68,-84V44L96,20z" />
+    <path
+        android:fillColor="#F3E5F5"
+        android:pathData="M96,32L40,52v28c0,36 24,64 56,72c32,-8 56,-36 56,-72V52L96,32z" />
+    <path
+        android:fillColor="#CE93D8"
+        android:fillAlpha="0"
+        android:strokeColor="#CE93D8"
+        android:strokeWidth="6"
+        android:pathData="M68,96l20,20l36,-36" />
+</vector>
