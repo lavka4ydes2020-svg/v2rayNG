@@ -30,6 +30,7 @@ import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.UpdateCheckerManager
 import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionUpdater
@@ -104,6 +105,8 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
         checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
         }
+
+        checkAutoUpdate()
     }
 
     private fun setupViewModel() {
@@ -131,6 +134,28 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         binding.viewPager.setCurrentItem(targetIndex, false)
 
         binding.tabGroup.isVisible = groups.size > 1
+    }
+
+    private fun checkAutoUpdate() {
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_CHECK_UPDATE, true)) {
+            lifecycleScope.launch {
+                try {
+                    val result = UpdateCheckerManager.checkForUpdate(false)
+                    if (result.hasUpdate) {
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle(getString(R.string.update_new_version_found, result.latestVersion))
+                            .setMessage(result.releaseNotes)
+                            .setPositiveButton(R.string.update_now) { _, _ ->
+                                startActivity(Intent(this@MainActivity, CheckUpdateActivity::class.java))
+                            }
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .show()
+                    }
+                } catch (_: Exception) {
+                    // Silent fail on auto-check
+                }
+            }
+        }
     }
 
     private fun handleFabAction() {
@@ -644,6 +669,7 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
             R.id.routing_setting -> requestActivityLauncher.launch(Intent(this, RoutingSettingActivity::class.java))
             R.id.settings -> requestActivityLauncher.launch(Intent(this, SettingsActivity::class.java))
             R.id.about -> startActivity(Intent(this, AboutActivity::class.java))
+            R.id.check_update -> startActivity(Intent(this, CheckUpdateActivity::class.java))
         }
 
         binding.drawerLayout.closeDrawer(GravityCompat.START)
