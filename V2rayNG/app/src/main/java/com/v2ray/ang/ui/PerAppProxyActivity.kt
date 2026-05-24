@@ -2,29 +2,27 @@ package com.v2ray.ang.ui
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.text.TextUtils
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
 import androidx.activity.viewModels
-import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityBypassListBinding
 import com.v2ray.ang.dto.AppInfo
-import com.v2ray.ang.dto.UrlContentRequest
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastSuccess
-import com.v2ray.ang.extension.v2RayApplication
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsChangeManager
-import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.util.AppManagerUtil
-import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.LogUtil
-import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.PerAppProxyViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,85 +36,311 @@ class PerAppProxyActivity : BaseActivity() {
     private var appsAll: List<AppInfo>? = null
     private val viewModel: PerAppProxyViewModel by viewModels()
 
-    /**
-     * Recommended apps for Alfredo VPN per-app proxy.
-     * These apps will have their traffic routed through the VPN.
-     */
-    companion object {
-        /**
-         * Prefix-based matching for apps that have multiple package variants.
-         * Telegram, for example, can be org.telegram.messenger, org.telegram.messenger.web, etc.
-         */
-        private val TELEGRAM_PREFIXES = listOf("org.telegram.messenger", "org.telegram.plus", "org.thunderdog.challegram")
+    // Filter state
+    private var currentFilter = "all"
+    private var searchQuery = ""
 
-        /**
-         * Exact package matches for recommended apps.
-         */
+    companion object {
+        private val TELEGRAM_PREFIXES = listOf("org.telegram.messenger", "org.telegram.plus", "org.thunderdog.challegram")
         val RECOMMENDED_PACKAGES = setOf(
-            "com.whatsapp",                     // WhatsApp
-            "com.instagram.android",            // Instagram
-            "com.google.android.youtube",       // YouTube
-            "com.discord",                      // Discord
-            "com.google.android.apps.meetings", // Google Meet
-            // FaceTime — iOS only, not available on Android
+            "com.whatsapp",
+            "com.instagram.android",
+            "com.google.android.youtube",
+            "com.discord",
+            "com.google.android.apps.meetings",
         )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(binding.root)
         setContentViewWithToolbar(binding.root, showHomeAsUp = true, title = getString(R.string.per_app_proxy_settings))
 
+        // Add custom divider to RecyclerView
         addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
 
-        initList()
+        // Update mode badge — always Proxy mode
+        updateModeBadge()
 
-        binding.switchPerAppProxy.setOnCheckedChangeListener { _, isChecked ->
-            MmkvManager.encodeSettings(AppConfig.PREF_PER_APP_PROXY, isChecked)
+        // Build filter chips
+        buildFilterChips()
+
+        // Wire search
+        binding.searchView.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                searchQuery = s?.toString() ?: ""
+                refreshList()
+            }
+        })
+
+        // Apply button
+        binding.btnApply.setOnClickListener {
+            viewModel.run {
+                // Save is already automatic on each toggle, but trigger restart
+                SettingsChangeManager.makeRestartService()
+            }
+            toastSuccess(R.string.toast_success)
         }
-        binding.switchPerAppProxy.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY, false)
 
-        // Always use proxy mode (only selected apps through VPN) — bypass mode is removed
-        // for simplicity. The per-app proxy always means "only these apps".
-        MmkvManager.encodeSettings(AppConfig.PREF_BYPASS_APPS, false)
+        // Load apps
+        initList()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_bypass_list, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.select_all -> {
+            selectAllApp()
+            true
+        }
+        R.id.invert_selection -> {
+            invertSelection()
+            true
+        }
+        R.id.select_recommended -> {
+            selectRecommendedApps()
+            true
+        }
+        else -> super.onOptionsItemSelected(item)
+    }
+
+    // ─── Mode badge ────────────────────────────────────────
+
+    /**
+     * Update the mode badge text based on the current bypass/proxy mode.
+     */
+    private fun updateModeBadge() {
+        val count = MmkvManager.decodeSettingsStringSet(AppConfig.PREF_PER_APP_PROXY_SET)?.size ?: 0
+        binding.modeBadge.text = "🔒 VPN включён для $count приложений"
+    }
+
+    // ─── Filter chips ────────────────────────────────────────
+
+    /**
+     * Build filter chips (TextViews with background) and preset chips dynamically.
+     */
+    private fun buildFilterChips() {
+        val container = binding.chipContainer
+        container.removeAllViews()
+
+        // Filter definitions: key -> display label
+        val filters = linkedMapOf(
+            "all" to getString(R.string.chip_all),
+            "vpn" to getString(R.string.chip_vpn),
+            AppInfo.CAT_SOCIAL to getString(R.string.chip_social),
+            AppInfo.CAT_SYSTEM to getString(R.string.chip_system),
+            AppInfo.CAT_BROWSER to getString(R.string.chip_browser),
+            AppInfo.CAT_MEDIA to getString(R.string.chip_media),
+            AppInfo.CAT_GAMES to getString(R.string.chip_games),
+        )
+
+        filters.forEach { (key, label) ->
+            val chip = createChipView(label, key == "all")
+            chip.setOnClickListener {
+                currentFilter = key
+                refreshChipSelection(container, key)
+                refreshList()
+            }
+            container.addView(chip)
+        }
+
+        // Separator line
+        val sep = View(this).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                1.dpToPx(),
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            setBackgroundColor(0x20FFFFFF.toInt())
+            setPadding(0, 0, 0, 0)
+        }
+        // Actually use margin instead
+        val sepSpacer = View(this).apply {
+            layoutParams = ViewGroup.LayoutParams(12.dpToPx(), 1)
+        }
+        container.addView(sepSpacer)
+
+        // Preset chips
+        addPresetChip(container, "\uD83D\uDCDF ${getString(R.string.chip_preset_messengers)}") {
+            applyPresetMessengers()
+        }
+        addPresetChip(container, "\uD83C\uDFE6 ${getString(R.string.chip_preset_banking)}") {
+            applyPresetBanking()
+        }
+        addPresetChip(container, "\uD83C\uDFB5 ${getString(R.string.chip_preset_media)}") {
+            applyPresetMedia()
+        }
+    }
+
+    private fun createChipView(label: String, selected: Boolean): TextView {
+        val dp8 = 8.dpToPx()
+        val dp12 = 12.dpToPx()
+        return TextView(this).apply {
+            text = label
+            textSize = 12f
+            setPadding(dp12, 6.dpToPx(), dp12, 6.dpToPx())
+            val marginEnd = if (selected) dp8 else dp8
+            val lp = ViewGroup.MarginLayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.marginEnd = marginEnd
+            layoutParams = lp
+            setBackgroundResource(if (selected) R.drawable.badge_pill else R.drawable.search_background)
+            setTextColor(
+                if (selected) ContextCompat.getColor(this@PerAppProxyActivity, android.R.color.white)
+                else 0x99FFFFFF.toInt()
+            )
+            isAllCaps = false
+        }
+    }
+
+    private fun refreshChipSelection(container: ViewGroup, selectedKey: String) {
+        val filters = linkedMapOf(
+            "all" to null,
+            "vpn" to null,
+            AppInfo.CAT_SOCIAL to null,
+            AppInfo.CAT_SYSTEM to null,
+            AppInfo.CAT_BROWSER to null,
+            AppInfo.CAT_MEDIA to null,
+            AppInfo.CAT_GAMES to null,
+        )
+        var idx = 0
+        filters.keys.forEach { key ->
+            if (idx < container.childCount) {
+                val child = container.getChildAt(idx)
+                if (child is TextView && !child.text.contains("\uD83D\uDCDF") && !child.text.contains("\uD83C\uDFE6") && !child.text.contains("\uD83C\uDFB5")) {
+                    child.setBackgroundResource(
+                        if (key == selectedKey) R.drawable.badge_pill
+                        else R.drawable.search_background
+                    )
+                    child.setTextColor(
+                        if (key == selectedKey) ContextCompat.getColor(this, android.R.color.white)
+                        else 0x99FFFFFF.toInt()
+                    )
+                }
+                idx++
+            }
+        }
+    }
+
+    private fun addPresetChip(container: ViewGroup, label: String, onClick: () -> Unit) {
+        val chip = TextView(this).apply {
+            text = label
+            textSize = 11f
+            setPadding(10.dpToPx(), 5.dpToPx(), 10.dpToPx(), 5.dpToPx())
+            val lp = ViewGroup.MarginLayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.marginEnd = 6.dpToPx()
+            layoutParams = lp
+            setBackgroundColor(0x15CE93D8.toInt())
+            setTextColor(0xCCCE93D8.toInt())
+            setOnClickListener { onClick() }
+            isAllCaps = false
+        }
+        container.addView(chip)
+    }
+
+    // ─── Presets ─────────────────────────────────────────────
+
+    private fun applyPresetMessengers() {
+        viewModel.clear()
+        appsAll?.forEach { app ->
+            val pkg = app.packageName
+            if (TELEGRAM_PREFIXES.any { pkg.startsWith(it) } || pkg in PerAppProxyViewModel.PRESET_MESSENGERS) {
+                viewModel.add(pkg)
+            }
+        }
+        toast(getString(R.string.recommended_apps_selected, viewModel.selectedCount, 0))
+        refreshList()
+    }
+
+    private fun applyPresetBanking() {
+        viewModel.clear()
+        appsAll?.forEach { app ->
+            if (app.category == AppInfo.CAT_FINANCE) {
+                viewModel.add(app.packageName)
+            }
+        }
+        toast("Банки выбраны: ${viewModel.selectedCount}")
+        refreshList()
+    }
+
+    private fun applyPresetMedia() {
+        viewModel.clear()
+        appsAll?.forEach { app ->
+            val pkg = app.packageName
+            if (pkg.startsWith("com.google.android.youtube") || pkg == "com.spotify.music") {
+                viewModel.add(pkg)
+            }
+        }
+        toast("Медиа выбраны: ${viewModel.selectedCount}")
+        refreshList()
+    }
+
+    private fun selectRecommendedApps() {
+        viewModel.clear()
+        adapter?.let { adapter ->
+            var selectedCount = 0
+            adapter.displayList.filterIsInstance<AppInfo>().forEach { app ->
+                val pkg = app.packageName
+                when {
+                    TELEGRAM_PREFIXES.any { pkg.startsWith(it) } -> {
+                        viewModel.add(pkg); selectedCount++
+                    }
+                    pkg in RECOMMENDED_PACKAGES -> {
+                        viewModel.add(pkg); selectedCount++
+                    }
+                }
+            }
+            toast(getString(R.string.recommended_apps_selected, selectedCount, RECOMMENDED_PACKAGES.size + 1))
+            refreshList()
+        }
+    }
+
+    private fun selectAllApp() {
+        adapter?.let { adapter ->
+            val appItems = adapter.displayList.filterIsInstance<AppInfo>()
+            val pkgs = appItems.map { it.packageName }
+            val allSelected = pkgs.all { viewModel.contains(it) }
+            if (allSelected) {
+                viewModel.removeAll(pkgs)
+            } else {
+                viewModel.addAll(pkgs)
+            }
+            refreshList()
+        }
+    }
+
+    private fun invertSelection() {
+        adapter?.let { adapter ->
+            adapter.displayList.filterIsInstance<AppInfo>().forEach { app ->
+                viewModel.toggle(app.packageName)
+            }
+            refreshList()
+        }
+    }
+
+    // ─── List loading & refresh ──────────────────────────────
+
     private fun initList() {
+        binding.recyclerView.isNestedScrollingEnabled = false
         showLoading()
 
         lifecycleScope.launch {
             try {
                 val apps = withContext(Dispatchers.IO) {
                     val appsList = AppManagerUtil.loadNetworkAppList(this@PerAppProxyActivity)
-
-                    val blacklistSet = viewModel.getAll()
-                    if (blacklistSet.isNotEmpty()) {
-                        appsList.forEach { app ->
-                            app.isSelected = if (blacklistSet.contains(app.packageName)) 1 else 0
-                        }
-                        appsList.sortedWith { p1, p2 ->
-                            when {
-                                p1.isSelected > p2.isSelected -> -1
-                                p1.isSelected < p2.isSelected -> 1
-                                p1.isSystemApp > p2.isSystemApp -> 1
-                                p1.isSystemApp < p2.isSystemApp -> -1
-                                p1.appName.lowercase() > p2.appName.lowercase() -> 1
-                                p1.appName.lowercase() < p2.appName.lowercase() -> -1
-                                p1.packageName > p2.packageName -> 1
-                                p1.packageName < p2.packageName -> -1
-                                else -> 0
-                            }
-                        }
-                    } else {
-                        val collator = Collator.getInstance()
-                        appsList.sortedWith(compareBy(collator) { it.appName })
-                    }
+                    val collator = Collator.getInstance()
+                    appsList.sortedWith(compareBy(collator) { it.appName })
                 }
-
                 appsAll = apps
-                adapter = PerAppProxyAdapter(apps, viewModel)
-                binding.recyclerView.adapter = adapter
-
+                refreshList()
             } catch (e: Exception) {
                 LogUtil.e(ANG_PACKAGE, "Error loading apps", e)
             } finally {
@@ -125,199 +349,34 @@ class PerAppProxyActivity : BaseActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_bypass_list, menu)
-
-        val searchItem = menu.findItem(R.id.search_view)
-        if (searchItem != null) {
-            val searchView = searchItem.actionView as SearchView
-            searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean = false
-
-                override fun onQueryTextChange(newText: String?): Boolean {
-                    filterProxyApp(newText.orEmpty())
-                    return false
-                }
-            })
-        }
-
-        return super.onCreateOptionsMenu(menu)
-    }
-
-
     @SuppressLint("NotifyDataSetChanged")
-    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.select_all -> {
-            selectAllApp()
-            allowPerAppProxy()
-            true
-        }
+    private fun refreshList() {
+        val apps = appsAll ?: return
 
-        R.id.invert_selection -> {
-            invertSelection()
-            allowPerAppProxy()
-            true
-        }
+        val displayList = PerAppProxyAdapter.buildDisplayList(
+            apps = apps,
+            filterCategory = currentFilter,
+            searchQuery = searchQuery,
+            viewModel = viewModel
+        )
 
-        R.id.select_recommended -> {
-            selectRecommendedApps()
-            allowPerAppProxy()
-            true
-        }
-
-        R.id.import_proxy_app -> {
-            importProxyApp()
-            allowPerAppProxy()
-            true
-        }
-
-        R.id.export_proxy_app -> {
-            exportProxyApp()
-            true
-        }
-
-        else -> super.onOptionsItemSelected(item)
-    }
-
-    /**
-     * Selects the recommended apps for VPN proxying.
-     * Uses prefix matching for apps like Telegram that have multiple package variants.
-     */
-    private fun selectRecommendedApps() {
-        viewModel.clear()
-        adapter?.let { adapter ->
-            var selectedCount = 0
-            val totalRecommended = RECOMMENDED_PACKAGES.size + 1 // +1 for Telegram
-
-            adapter.apps.forEach { app ->
-                val pkg = app.packageName
-                when {
-                    // Telegram: match any variant by prefix
-                    TELEGRAM_PREFIXES.any { pkg.startsWith(it) } -> {
-                        viewModel.add(pkg)
-                        selectedCount++
-                    }
-                    // Other recommended apps: exact match
-                    pkg in RECOMMENDED_PACKAGES -> {
-                        viewModel.add(pkg)
-                        selectedCount++
-                    }
-                }
-            }
-
-            toast(getString(R.string.recommended_apps_selected, selectedCount, totalRecommended))
-            refreshData()
-        }
-    }
-
-    private fun selectAllApp() {
-        adapter?.let { adapter ->
-            val pkgNames = adapter.apps.map { it.packageName }
-            val allSelected = pkgNames.all { viewModel.contains(it) }
-
-            if (allSelected) {
-                viewModel.removeAll(pkgNames)
-            } else {
-                viewModel.addAll(pkgNames)
-            }
-            refreshData()
-        }
-    }
-
-    private fun invertSelection() {
-        adapter?.let { adapter ->
-            adapter.apps.forEach { app ->
-                viewModel.toggle(app.packageName)
-            }
-            refreshData()
-        }
-    }
-
-    private fun importProxyApp() {
-        val content = Utils.getClipboard(applicationContext)
-        if (TextUtils.isEmpty(content)) return
-        selectProxyApp(content, false)
-        toastSuccess(R.string.toast_success)
-    }
-
-    private fun exportProxyApp() {
-        var lst = "false" // Always proxy mode
-
-        viewModel.getAll().forEach { pkg ->
-            lst = lst + System.lineSeparator() + pkg
-        }
-        Utils.setClipboard(applicationContext, lst)
-        toastSuccess(R.string.toast_success)
-    }
-
-    private fun allowPerAppProxy() {
-        binding.switchPerAppProxy.isChecked = true
-        SettingsChangeManager.makeRestartService()
-    }
-
-    @SuppressLint("NotifyDataSetChanged")
-    private fun selectProxyApp(content: String, force: Boolean): Boolean {
-        try {
-            val proxyApps = if (TextUtils.isEmpty(content)) {
-                Utils.readTextFromAssets(v2RayApplication, "proxy_package_name")
-            } else {
-                content
-            }
-            if (TextUtils.isEmpty(proxyApps)) return false
-
-            viewModel.clear()
-            adapter?.let { adapter ->
-                adapter.apps.forEach { app ->
-                    val packageName = app.packageName
-                    if (inProxyApps(proxyApps, packageName, force)) {
-                        viewModel.add(packageName)
-                    }
-                }
-                refreshData()
-            }
-        } catch (e: Exception) {
-            LogUtil.e(AppConfig.TAG, "Error selecting proxy app", e)
-            return false
-        }
-        return true
-    }
-
-    private fun inProxyApps(proxyApps: String, packageName: String, force: Boolean): Boolean {
-        println(packageName)
-        if (force) {
-            if (packageName == "com.google.android.webview") return false
-            if (packageName.startsWith("com.google")) return true
-        }
-
-        return proxyApps.indexOf(packageName) >= 0
-    }
-
-    private fun filterProxyApp(content: String): Boolean {
-        val apps = ArrayList<AppInfo>()
-
-        val key = content.uppercase()
-        if (key.isNotEmpty()) {
-            appsAll?.forEach {
-                if (it.appName.uppercase().indexOf(key) >= 0
-                    || it.packageName.uppercase().indexOf(key) >= 0
-                ) {
-                    apps.add(it)
-                }
-            }
+        if (adapter == null) {
+            adapter = PerAppProxyAdapter(displayList, viewModel)
+            binding.recyclerView.adapter = adapter
         } else {
-            appsAll?.forEach {
-                apps.add(it)
-            }
+            adapter!!.updateList(displayList)
         }
 
-        adapter = PerAppProxyAdapter(apps, adapter?.viewModel ?: viewModel)
-        binding.recyclerView.adapter = adapter
-        refreshData()
-        return true
+        updateCount()
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun refreshData() {
-        adapter?.notifyDataSetChanged()
+    private fun updateCount() {
+        val total = appsAll?.size ?: 0
+        val selected = viewModel.selectedCount
+        binding.selectedCount.text = getString(R.string.per_app_proxy_count, selected, total)
     }
+
+    // ─── Helpers ─────────────────────────────────────────────
+
+    private fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
 }

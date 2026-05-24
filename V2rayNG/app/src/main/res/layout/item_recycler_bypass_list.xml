@@ -6,19 +6,24 @@
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
-    android:padding="@dimen/padding_spacing_dp8">
+    android:orientation="horizontal"
+    android:paddingVertical="8dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="8dp">
 
+    <!-- App icon -->
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icon"
-        android:layout_width="@dimen/view_height_dp48"
-        android:layout_height="@dimen/view_height_dp48"
-        android:padding="@dimen/padding_spacing_dp8" />
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:padding="4dp" />
 
+    <!-- App name + package -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1.0"
-        android:gravity="center"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
         android:orientation="vertical">
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -26,23 +31,40 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+            android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+            android:textSize="14sp" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/package_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxLines="3"
-            android:paddingTop="@dimen/padding_spacing_dp8"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textSize="11sp"
+            android:textColor="?android:attr/textColorTertiary" />
     </LinearLayout>
 
-    <androidx.appcompat.widget.AppCompatCheckBox
-        android:id="@+id/check_box"
+    <!-- VPN badge -->
+    <TextView
+        android:id="@+id/badge_vpn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="6dp"
+        android:paddingVertical="2dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/badge_vpn"
+        android:text="VPN"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        android:gravity="center" />
+
+    <!-- Toggle switch -->
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_toggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:clickable="false"
-        android:focusable="false"
-        android:padding="@dimen/padding_spacing_dp8" />
+        android:focusable="false" />
 
 </LinearLayout>

@@ -502,4 +502,18 @@
         <item>WebDAV</item>
     </string-array>
 
+    <!-- Per-app proxy chips -->
+    <string name="btn_apply">Apply</string>
+    <string name="chip_all">All</string>
+    <string name="chip_vpn">VPN</string>
+    <string name="chip_social">Social</string>
+    <string name="chip_system">System</string>
+    <string name="chip_browser">Browser</string>
+    <string name="chip_media">Media</string>
+    <string name="chip_games">Games</string>
+    <string name="chip_preset_messengers">Messengers</string>
+    <string name="chip_preset_banking">Banking</string>
+    <string name="chip_preset_media">Media</string>
+    <string name="per_app_proxy_count">Via VPN: %1$d of %2$d</string>
+
 </resources>

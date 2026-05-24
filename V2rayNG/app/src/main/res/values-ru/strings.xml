@@ -493,4 +493,19 @@
         <item>WebDAV</item>
     </string-array>
 
+    <string name="chip_preset_media">Медиа</string>
+
+    <!-- Per-app proxy chips (ru) -->
+    <string name="btn_apply">Применить</string>
+    <string name="chip_all">Все</string>
+    <string name="chip_vpn">Через VPN</string>
+    <string name="chip_social">Соцсети</string>
+    <string name="chip_system">Системные</string>
+    <string name="chip_browser">Браузеры</string>
+    <string name="chip_media">Медиа</string>
+    <string name="chip_games">Игры</string>
+    <string name="chip_preset_messengers">📱 Мессенджеры</string>
+    <string name="chip_preset_banking">🏦 Банки</string>
+    <string name="per_app_proxy_count">Через VPN: %1$d из %2$d</string>
+
 </resources>

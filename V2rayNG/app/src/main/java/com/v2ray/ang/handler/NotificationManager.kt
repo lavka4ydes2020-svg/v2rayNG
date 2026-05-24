@@ -255,10 +255,6 @@ object NotificationManager {
      * Returns per-app proxy status description.
      */
     private fun getPerAppInfo(context: Context): String {
-        val enabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY)
-        if (enabled != true) {
-            return context.getString(R.string.notification_per_app_disabled)
-        }
         val apps = MmkvManager.decodeSettingsStringSet(AppConfig.PREF_PER_APP_PROXY_SET)
         val count = apps?.size ?: 0
         return when {
