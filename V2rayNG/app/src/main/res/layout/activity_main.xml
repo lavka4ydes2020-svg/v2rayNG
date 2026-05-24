@@ -555,7 +555,7 @@
                     android:layout_height="240dp"
                     android:scrollbars="vertical" />
 
-                <!-- Connection test status bar -->
+                <!-- Connection test status bar — hidden, badge + toggle covers this -->
                 <LinearLayout
                     android:id="@+id/layout_test"
                     android:layout_width="match_parent"
@@ -566,7 +566,7 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingStart="16dp"
-                    android:visibility="visible">
+                    android:visibility="gone">
 
                     <TextView
                         android:id="@+id/tv_test_state"
