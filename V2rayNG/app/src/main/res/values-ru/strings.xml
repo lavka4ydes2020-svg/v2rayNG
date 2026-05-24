@@ -508,11 +508,45 @@
     <string name="chip_preset_banking">🏦 Банки</string>
     <string name="per_app_proxy_count">Через VPN: %1$d из %2$d</string>
 
-    <!-- Minimalist Home -->
+    <!-- Minimalist Home UI -->
     <string name="app_subtitle">Ваше приватное подключение</string>
+    <string name="no_server_selected">Сервер не выбран</string>
+    <string name="toggle_press_to_connect">Нажмите для подключения</string>
+    <string name="toggle_press_to_disconnect">Нажмите для отключения</string>
+    <string name="toggle_connecting">Подключение…</string>
+    <string name="status_connected">Подключено</string>
+    <string name="status_disconnected">Отключено</string>
+    <string name="status_connecting">Подключение</string>
+    <string name="stat_download">Загрузка</string>
+    <string name="stat_upload">Отдача</string>
+    <string name="stat_ping">Пинг</string>
+    <string name="current_server_label">Текущий сервер</string>
+    <string name="quick_actions_label">Быстрый доступ</string>
+    <string name="all_settings_label">Настройки</string>
+    <string name="statistics_label">Статистика</string>
+    <string name="servers_label">Серверы</string>
     <string name="change_server">Сменить</string>
     <string name="quick_about">О приложении</string>
     <string name="quick_update">Проверить обновление</string>
     <string name="quick_statistics">Статистика</string>
 
+    <!-- Settings bottom sheet -->
+    <string name="settings_sheet_title">Настройки</string>
+    <string name="settings_sheet_subtitle">Подключение и настройки</string>
+    <string name="settings_section_basic">Основные</string>
+    <string name="settings_section_advanced">Расширенные</string>
+    <string name="settings_advanced_label">DNS, MUX, фрагментация, ядро VPN</string>
+    <string name="settings_advanced_warning">Только для опытных пользователей</string>
+
+    <!-- Advanced warning dialog -->
+    <string name="advanced_warning_title">Расширенные настройки</string>
+    <string name="advanced_warning_message">Изменение этих параметров может повлиять на работу ядра VPN. Меняйте их только если понимаете, что делаете. Неверные настройки могут нарушить соединение.</string>
+    <string name="advanced_warning_affects">Влияет на:</string>
+    <string name="advanced_warning_enter">Всё равно перейти</string>
+
+    <!-- Preference toggles -->
+    <string name="pref_auto_start_label">Автозапуск при загрузке</string>
+    <string name="pref_kill_switch_label">Kill Switch</string>
+    <string name="pref_dark_theme_label">Тёмная тема</string>
+    <string name="pref_language_label">Язык</string>
 </resources>

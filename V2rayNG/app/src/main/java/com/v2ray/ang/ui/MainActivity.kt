@@ -334,6 +334,7 @@ class MainActivity : HelperBaseActivity() {
             // Update new toggle
             binding.btnConnectToggle.setImageResource(R.drawable.ic_stop_24dp)
             binding.btnConnectToggle.background = ContextCompat.getDrawable(this, R.drawable.toggle_button_on)
+            binding.btnConnectToggle.backgroundTintList = null
             binding.btnConnectToggle.isEnabled = true
             binding.tvToggleLabel.text = getString(R.string.toggle_press_to_disconnect)
             binding.btnConnectToggle.contentDescription = getString(R.string.action_stop_service)
@@ -355,6 +356,7 @@ class MainActivity : HelperBaseActivity() {
             // Update new toggle
             binding.btnConnectToggle.setImageResource(R.drawable.ic_play_24dp)
             binding.btnConnectToggle.background = ContextCompat.getDrawable(this, R.drawable.toggle_button_off)
+            binding.btnConnectToggle.backgroundTintList = null
             binding.btnConnectToggle.isEnabled = true
             binding.tvToggleLabel.text = getString(R.string.toggle_press_to_connect)
             binding.btnConnectToggle.contentDescription = getString(R.string.tasker_start_service)
