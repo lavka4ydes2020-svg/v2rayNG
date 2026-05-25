@@ -2,6 +2,7 @@ package com.v2ray.ang.ui
 
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.net.TrafficStats
 import android.net.Uri
 import android.net.VpnService
 import android.os.Bundle
@@ -24,6 +25,8 @@ import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.databinding.ActivityMainBinding
 import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.enums.PermissionType
+import com.v2ray.ang.extension.toSpeedString
+import com.v2ray.ang.extension.toTrafficString
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.AngConfigManager
@@ -36,7 +39,9 @@ import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -58,6 +63,14 @@ class MainActivity : HelperBaseActivity() {
         }
     }
 
+    /** Coroutine job for polling traffic stats every ~3 seconds while connected. */
+    private var statsJob: Job? = null
+
+    /** Previous tick's total TX bytes for traffic delta calculation. */
+    private var lastStatsTx = 0L
+
+    /** Previous tick's total RX bytes for traffic delta calculation. */
+    private var lastStatsRx = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,9 +95,6 @@ class MainActivity : HelperBaseActivity() {
         // Server card
         binding.cardCurrentServer.setOnClickListener {
             // Scroll to server list or open subscription settings
-            requestActivityLauncher.launch(Intent(this, SubSettingActivity::class.java))
-        }
-        binding.btnChangeServer.setOnClickListener {
             requestActivityLauncher.launch(Intent(this, SubSettingActivity::class.java))
         }
 
@@ -205,9 +215,12 @@ class MainActivity : HelperBaseActivity() {
         if (!serverId.isNullOrEmpty()) {
             val server = MmkvManager.decodeServerConfig(serverId)
             if (server != null) {
-                binding.tvServerName.text = server.remarks.ifEmpty { getString(R.string.no_server_selected) }
-                val configType = server.configType
-                binding.tvServerDetail.text = when (configType) {
+                // Server name: country name from IP + Premium suffix
+                val countryName = getCountryNameForServer(server.server)
+                binding.tvServerName.text = "$countryName — Premium"
+
+                // Detail line: IP-only • Protocol (no port, matching prototype)
+                val configTypeName = when (server.configType) {
                     EConfigType.VLESS -> "VLESS+Reality"
                     EConfigType.VMESS -> "VMess"
                     EConfigType.SHADOWSOCKS -> "Shadowsocks"
@@ -218,8 +231,15 @@ class MainActivity : HelperBaseActivity() {
                     EConfigType.HYSTERIA2 -> "Hysteria2"
                     else -> ""
                 }
-                // Show flag emoji based on server info or default
-                binding.tvServerFlag.text = "\uD83C\uDF10" // globe emoji as default
+                val address = server.server ?: ""
+                binding.tvServerDetail.text = if (address.isNotEmpty()) {
+                    "$address • $configTypeName"
+                } else {
+                    configTypeName
+                }
+
+                // Flag - attempt to detect from server address
+                binding.tvServerFlag.text = getFlagForServer(server.server)
                 return
             }
         }
@@ -228,16 +248,108 @@ class MainActivity : HelperBaseActivity() {
         binding.tvServerFlag.text = "\uD83C\uDF10"
     }
 
+    /**
+     * Detect country flag from server address.
+     * Current VPS is in Germany (79.137.202.148). Falls back to globe emoji.
+     */
+    private fun getFlagForServer(address: String?): String {
+        if (address.isNullOrEmpty()) return "\uD83C\uDF10"
+        return when {
+            address.contains("79.137") || address.contains("aeza") -> "\uD83C\uDDE9\uD83C\uDDEA" // Germany
+            address.contains("ru") || address.contains("mos") -> "\uD83C\uDDF7\uD83C\uDDFA" // Russia
+            address.contains("nl") || address.contains("neth") -> "\uD83C\uDDF3\uD83C\uDDF1" // Netherlands
+            address.contains("us") || address.contains("united") -> "\uD83C\uDDFA\uD83C\uDDF8" // USA
+            address.contains("jp") || address.contains("japan") -> "\uD83C\uDDEF\uD83C\uDDF5" // Japan
+            address.contains("sg") || address.contains("singapore") -> "\uD83C\uDDF8\uD83C\uDDEC" // Singapore
+            address.contains("uk") || address.contains("london") || address.contains("gb") -> "\uD83C\uDDEC\uD83C\uDDE7" // UK
+            address.contains("fr") || address.contains("france") -> "\uD83C\uDDEB\uD83C\uDDF7" // France
+            else -> "\uD83C\uDF10" // globe fallback
+        }
+    }
+
+    /**
+     * Returns human-readable country name in Russian, matching the flag detection.
+     */
+    private fun getCountryNameForServer(address: String?): String {
+        if (address.isNullOrEmpty()) return "Сервер"
+        return when {
+            address.contains("79.137") || address.contains("aeza") -> "Германия"
+            address.contains("ru") || address.contains("mos") -> "Россия"
+            address.contains("nl") || address.contains("neth") -> "Нидерланды"
+            address.contains("us") || address.contains("united") -> "США"
+            address.contains("jp") || address.contains("japan") -> "Япония"
+            address.contains("sg") || address.contains("singapore") -> "Сингапур"
+            address.contains("uk") || address.contains("london") || address.contains("gb") -> "Великобритания"
+            address.contains("fr") || address.contains("france") -> "Франция"
+            else -> "Сервер"
+        }
+    }
+
     private fun setupViewModel() {
         mainViewModel.updateTestResultAction.observe(this) { setTestState(it) }
         mainViewModel.isRunning.observe(this) { isRunning ->
             applyRunningState(false, isRunning)
-            if (isRunning) updateServerCard()
+            if (isRunning) {
+                updateServerCard()
+                startStatsPolling()
+            } else {
+                stopStatsPolling()
+                // Reset stats to placeholder dashes
+                binding.tvStatDownload.text = "—"
+                binding.tvStatUpload.text = "—"
+                binding.tvStatPing.text = "—"
+                binding.pbPingLoading.visibility = View.GONE
+                binding.tvStatPing.visibility = View.VISIBLE
+            }
         }
         mainViewModel.startListenBroadcast()
         lifecycleScope.launch(Dispatchers.IO) {
             mainViewModel.initAssets(assets)
         }
+    }
+
+    /**
+     * Starts a coroutine that polls TrafficStats every ~3 seconds while VPN is connected.
+     * Calculates delta between ticks and formats as speed (KB/s, MB/s).
+     */
+    private fun startStatsPolling() {
+        stopStatsPolling() // ensure no duplicate jobs
+        lastStatsTx = 0L
+        lastStatsRx = 0L
+        statsJob = lifecycleScope.launch(Dispatchers.IO) {
+            while (isActive) {
+                delay(3000L)
+                val currentTx = TrafficStats.getTotalTxBytes()
+                val currentRx = TrafficStats.getTotalRxBytes()
+
+                if (lastStatsTx == 0L && lastStatsRx == 0L) {
+                    // First tick — record baseline
+                    lastStatsTx = currentTx
+                    lastStatsRx = currentRx
+                    continue
+                }
+
+                val txDelta = currentTx - lastStatsTx
+                val rxDelta = currentRx - lastStatsRx
+                lastStatsTx = currentTx
+                lastStatsRx = currentRx
+
+                val downSpeed = (rxDelta / 3.0).toLong() // bytes per second
+                val upSpeed = (txDelta / 3.0).toLong()
+
+                withContext(Dispatchers.Main) {
+                    binding.tvStatDownload.text = downSpeed.toSpeedString()
+                    binding.tvStatUpload.text = upSpeed.toSpeedString()
+                    // Ping is updated separately via test result
+                }
+            }
+        }
+    }
+
+    /** Cancels the stats polling coroutine. */
+    private fun stopStatsPolling() {
+        statsJob?.cancel()
+        statsJob = null
     }
 
     private fun checkAutoUpdate() {
@@ -308,6 +420,21 @@ class MainActivity : HelperBaseActivity() {
 
     private fun setTestState(content: String?) {
         binding.tvTestState.text = content
+        // Also update the ping stat on the main screen
+        if (!content.isNullOrBlank()) {
+            // Hide loading animation when real result arrives
+            val isRealResult = content.contains("ms", ignoreCase = true)
+                    || content.contains("мс", ignoreCase = true)
+                    || content.contains("delay", ignoreCase = true)
+            if (isRealResult) {
+                binding.pbPingLoading.visibility = View.GONE
+                binding.tvStatPing.visibility = View.VISIBLE
+            }
+            // Strip prefix text, keep only number + ms/мс
+            val firstLine = content.split("\n")[0].trim()
+            val pingText = firstLine.replace(Regex(".*?(\\d+\\s*ms|\\d+\\s*мс)", RegexOption.IGNORE_CASE), "$1")
+            binding.tvStatPing.text = pingText
+        }
     }
 
     private fun applyRunningState(isLoading: Boolean, isRunning: Boolean) {
@@ -315,9 +442,12 @@ class MainActivity : HelperBaseActivity() {
             // Update the new toggle
             binding.btnConnectToggle.isEnabled = false
             binding.btnConnectToggle.setImageResource(R.drawable.ic_fab_check)
-            binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(this, R.color.colorWhite)
+            // Set orange icon tint for connecting state (remove white background tint that was washing out the orange gradient)
+            binding.btnConnectToggle.imageTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this, android.R.color.white)
             )
+            binding.btnConnectToggle.backgroundTintList = null
+            binding.btnConnectToggle.background = ContextCompat.getDrawable(this, R.drawable.toggle_button_connecting)
             binding.tvToggleLabel.text = getString(R.string.toggle_connecting)
 
             // Update the badge
@@ -331,8 +461,11 @@ class MainActivity : HelperBaseActivity() {
         }
 
         if (isRunning) {
-            // Update new toggle
-            binding.btnConnectToggle.setImageResource(R.drawable.ic_stop_24dp)
+            // Update new toggle — checkmark icon with white tint (matching prototype)
+            binding.btnConnectToggle.setImageResource(R.drawable.ic_fab_check)
+            binding.btnConnectToggle.imageTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this, android.R.color.white)
+            )
             binding.btnConnectToggle.background = ContextCompat.getDrawable(this, R.drawable.toggle_button_on)
             binding.btnConnectToggle.backgroundTintList = null
             binding.btnConnectToggle.isEnabled = true
@@ -348,6 +481,16 @@ class MainActivity : HelperBaseActivity() {
             setTestState(getString(R.string.connection_connected))
             binding.layoutTest.isFocusable = true
 
+            // Show loading animation and auto-start ping test
+            binding.pbPingLoading.visibility = View.VISIBLE
+            binding.tvStatPing.visibility = View.GONE
+            lifecycleScope.launch {
+                delay(2000) // wait for connection to stabilize
+                if (mainViewModel.isRunning.value == true) {
+                    mainViewModel.testCurrentServerRealPing()
+                }
+            }
+
             // FAB
             binding.fab.setImageResource(R.drawable.ic_stop_24dp)
             binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
@@ -357,6 +500,7 @@ class MainActivity : HelperBaseActivity() {
             binding.btnConnectToggle.setImageResource(R.drawable.ic_play_24dp)
             binding.btnConnectToggle.background = ContextCompat.getDrawable(this, R.drawable.toggle_button_off)
             binding.btnConnectToggle.backgroundTintList = null
+            binding.btnConnectToggle.imageTintList = null
             binding.btnConnectToggle.isEnabled = true
             binding.tvToggleLabel.text = getString(R.string.toggle_press_to_connect)
             binding.btnConnectToggle.contentDescription = getString(R.string.tasker_start_service)
@@ -771,6 +915,7 @@ class MainActivity : HelperBaseActivity() {
 
 
     override fun onDestroy() {
+        stopStatsPolling()
         super.onDestroy()
     }
 }

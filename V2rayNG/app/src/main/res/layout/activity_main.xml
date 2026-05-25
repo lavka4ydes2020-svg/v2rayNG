@@ -135,8 +135,7 @@
                                 android:contentDescription="@string/tasker_start_service"
                                 android:elevation="4dp"
                                 android:scaleType="centerInside"
-                                android:src="@drawable/ic_play_24dp"
-                                app:tint="@color/colorWhite" />
+                                android:src="@drawable/ic_play_24dp" />
 
                             <TextView
                                 android:id="@+id/tv_toggle_label"
@@ -225,7 +224,16 @@
                                         android:text="—"
                                         android:textColor="#374151"
                                         android:textSize="14sp"
-                                        android:textStyle="bold" />
+                                        android:textStyle="bold"
+                                        android:visibility="gone" />
+
+                                    <ProgressBar
+                                        android:id="@+id/pb_ping_loading"
+                                        style="?android:attr/progressBarStyleSmall"
+                                        android:layout_width="16dp"
+                                        android:layout_height="16dp"
+                                        android:layout_marginTop="2dp"
+                                        android:visibility="gone" />
                                 </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>
@@ -321,33 +329,7 @@
                                     </LinearLayout>
                                 </LinearLayout>
 
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_alignParentEnd="true"
-                                    android:layout_centerVertical="true"
-                                    android:gravity="end"
-                                    android:orientation="vertical">
-
-                                    <TextView
-                                        android:id="@+id/tv_server_ping"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text=""
-                                        android:textColor="#059669"
-                                        android:textSize="13sp"
-                                        android:textStyle="bold"
-                                        android:visibility="gone" />
-
-                                    <ImageButton
-                                        android:id="@+id/btn_change_server"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:background="?attr/selectableItemBackgroundBorderless"
-                                        android:padding="8dp"
-                                        android:src="@drawable/ic_arrow_drop_down"
-                                        android:tint="#9CA3AF" />
-                                </LinearLayout>
+                                <!-- Ping badge and chevron removed per user request -->
                             </RelativeLayout>
                         </androidx.cardview.widget.CardView>
 

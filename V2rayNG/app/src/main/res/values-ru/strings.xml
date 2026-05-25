@@ -519,7 +519,7 @@
     <string name="status_connecting">Подключение</string>
     <string name="stat_download">Загрузка</string>
     <string name="stat_upload">Отдача</string>
-    <string name="stat_ping">Пинг</string>
+    <string name="stat_ping">Задержка</string>
     <string name="current_server_label">Текущий сервер</string>
     <string name="quick_actions_label">Быстрый доступ</string>
     <string name="all_settings_label">Настройки</string>
