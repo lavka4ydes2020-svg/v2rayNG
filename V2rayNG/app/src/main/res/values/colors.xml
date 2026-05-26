@@ -59,4 +59,8 @@
     <color name="red_600">#DC2626</color>
     <color name="green_600">#059669</color>
     <color name="amber_700">#D97706</color>
+
+    <!-- Update card backgrounds -->
+    <color name="update_card_green">#E8F5E9</color>
+    <color name="update_card_amber">#FFF3E0</color>
 </resources>

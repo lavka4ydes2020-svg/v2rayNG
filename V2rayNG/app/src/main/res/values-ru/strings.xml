@@ -407,6 +407,18 @@
     <string name="update_auto_check">Проверять при запуске</string>
     <string name="update_downloading">Скачивание обновления…</string>
     <string name="update_download_started">Загрузка начата</string>
+    <string name="update_checking_title">Проверка обновлений…</string>
+    <string name="update_checking_subtitle">Ищем новую версию на GitHub</string>
+    <string name="update_up_to_date">Актуальная версия</string>
+    <string name="update_up_to_date_subtitle">Вы используете последнюю версию</string>
+    <string name="update_new_version_title">Доступна версия %s</string>
+    <string name="update_recommended">Рекомендуется установить обновление</string>
+    <string name="update_download_and_install">⬇  Скачать и установить</string>
+    <string name="update_settings_section">Настройки</string>
+    <string name="update_check_pre_release_hint">Включая бета и тестовые сборки</string>
+    <string name="update_auto_check_hint">Проверять обновления при каждом запуске</string>
+    <string name="update_version_format">Alfredo VPN v%s</string>
+    <string name="update_lib_format">Xray %s</string>
 
     <string name="title_policy_group_type">Тип группы политик</string>
     <string name="title_policy_group_subscription_id">Из группы подписки</string>

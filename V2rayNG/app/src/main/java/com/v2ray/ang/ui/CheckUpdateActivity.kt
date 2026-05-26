@@ -9,9 +9,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import androidx.appcompat.app.AlertDialog
+import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.card.MaterialCardView
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.R
@@ -66,12 +68,9 @@ class CheckUpdateActivity : BaseActivity() {
             )
         }
 
-        binding.layoutCheckUpdate.setOnClickListener {
-            checkForUpdates(binding.checkPreRelease.isChecked)
-        }
-
         binding.checkPreRelease.setOnCheckedChangeListener { _, isChecked ->
             MmkvManager.encodeSettings(AppConfig.PREF_CHECK_UPDATE_PRE_RELEASE, isChecked)
+            checkForUpdates(isChecked)
         }
         binding.checkPreRelease.isChecked =
             MmkvManager.decodeSettingsBool(AppConfig.PREF_CHECK_UPDATE_PRE_RELEASE, false)
@@ -82,8 +81,10 @@ class CheckUpdateActivity : BaseActivity() {
         binding.switchAutoCheckUpdate.isChecked =
             MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_CHECK_UPDATE, true)
 
-        "v${BuildConfig.VERSION_NAME} (${CoreNativeManager.getLibVersion()})".also {
-            binding.tvVersion.text = it
+        binding.btnDownload.setOnClickListener {
+            pendingDownloadUrl?.let { url ->
+                downloadAndInstall(url, pendingVersion ?: "")
+            }
         }
 
         checkForUpdates(binding.checkPreRelease.isChecked)
@@ -94,45 +95,101 @@ class CheckUpdateActivity : BaseActivity() {
         unregisterReceiver(downloadReceiver)
     }
 
-    private fun checkForUpdates(includePreRelease: Boolean) {
-        toast(R.string.update_checking_for_update)
-        showLoading()
+    private var pendingDownloadUrl: String? = null
 
+    private fun checkForUpdates(includePreRelease: Boolean) {
+        showCheckingState()
         lifecycleScope.launch {
             try {
                 val result = UpdateCheckerManager.checkForUpdate(includePreRelease)
                 if (result.hasUpdate) {
-                    showUpdateDialog(result)
+                    showUpdateAvailable(result)
                 } else {
-                    toastSuccess(R.string.update_already_latest_version)
+                    showUpToDate()
                 }
             } catch (e: Exception) {
                 LogUtil.e(AppConfig.TAG, "Failed to check for updates: ${e.message}")
                 toastError(e.message ?: getString(R.string.toast_failure))
-            } finally {
-                hideLoading()
+                showUpToDate()
             }
         }
     }
 
-    private fun showUpdateDialog(result: CheckUpdateResult) {
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.update_new_version_found, result.latestVersion))
-            .setMessage(result.releaseNotes)
-            .setPositiveButton(R.string.update_now) { _, _ ->
-                result.downloadUrl?.let { url ->
-                    downloadAndInstall(url, result.latestVersion ?: "")
-                }
+    private fun showCheckingState() {
+        with(binding) {
+            progressChecking.visibility = View.VISIBLE
+            iconStatus.visibility = View.GONE
+            tvStatusTitle.text = getString(R.string.update_checking_title)
+            tvStatusTitle.setTextColor(ContextCompat.getColor(this@CheckUpdateActivity, R.color.md_theme_secondary))
+            tvStatusSubtitle.text = getString(R.string.update_checking_subtitle)
+            layoutVersion.visibility = View.GONE
+            tvChangelog.visibility = View.GONE
+            btnDownload.visibility = View.GONE
+            cardStatus.setCardBackgroundColor(
+                ContextCompat.getColor(this@CheckUpdateActivity, R.color.md_theme_secondaryContainer)
+            )
+        }
+    }
+
+    private fun showUpToDate() {
+        with(binding) {
+            progressChecking.visibility = View.GONE
+            iconStatus.visibility = View.VISIBLE
+            iconStatus.setImageResource(R.drawable.ic_fab_check)
+            iconStatus.imageTintList = ContextCompat.getColorStateList(
+                this@CheckUpdateActivity, android.R.color.holo_green_dark
+            )
+            tvStatusTitle.text = getString(R.string.update_up_to_date)
+            tvStatusTitle.setTextColor(
+                ContextCompat.getColor(this@CheckUpdateActivity, android.R.color.holo_green_dark)
+            )
+            tvStatusSubtitle.text = getString(R.string.update_up_to_date_subtitle)
+            tvVersionName.text = getString(R.string.update_version_format, BuildConfig.VERSION_NAME)
+            tvLibVersion.text = getString(R.string.update_lib_format, CoreNativeManager.getLibVersion())
+            layoutVersion.visibility = View.VISIBLE
+            tvChangelog.visibility = View.GONE
+            btnDownload.visibility = View.GONE
+            cardStatus.setCardBackgroundColor(
+                ContextCompat.getColor(this@CheckUpdateActivity, R.color.update_card_green)
+            )
+        }
+    }
+
+    private fun showUpdateAvailable(result: CheckUpdateResult) {
+        pendingDownloadUrl = result.downloadUrl
+        pendingVersion = result.latestVersion
+        with(binding) {
+            progressChecking.visibility = View.GONE
+            iconStatus.visibility = View.VISIBLE
+            iconStatus.setImageResource(R.drawable.ic_check_update_24dp)
+            iconStatus.imageTintList = ContextCompat.getColorStateList(
+                this@CheckUpdateActivity, R.color.amber_700
+            )
+            tvStatusTitle.text = getString(
+                R.string.update_new_version_title, result.latestVersion ?: ""
+            )
+            tvStatusTitle.setTextColor(
+                ContextCompat.getColor(this@CheckUpdateActivity, R.color.amber_700)
+            )
+            tvStatusSubtitle.text = getString(R.string.update_recommended)
+            layoutVersion.visibility = View.GONE
+            if (!result.releaseNotes.isNullOrBlank()) {
+                tvChangelog.visibility = View.VISIBLE
+                tvChangelog.text = result.releaseNotes
+            } else {
+                tvChangelog.visibility = View.GONE
             }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+            btnDownload.visibility = View.VISIBLE
+            cardStatus.setCardBackgroundColor(
+                ContextCompat.getColor(this@CheckUpdateActivity, R.color.update_card_amber)
+            )
+        }
     }
 
     private fun downloadAndInstall(downloadUrl: String, version: String) {
         try {
             val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             val uri = Uri.parse(downloadUrl)
-
             val fileName = "AlfredoVPN_${version}.apk"
 
             val request = DownloadManager.Request(uri)
@@ -150,7 +207,6 @@ class CheckUpdateActivity : BaseActivity() {
 
             pendingDownloadId = dm.enqueue(request)
             pendingVersion = version
-
             toast(R.string.update_download_started)
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Failed to start download: ${e.message}")
