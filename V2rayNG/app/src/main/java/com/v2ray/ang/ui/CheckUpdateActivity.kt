@@ -176,6 +176,8 @@ class CheckUpdateActivity : BaseActivity() {
     }
 
     private fun showDownloadingState() {
+        // Keep screen on during download
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         with(binding) {
             progressChecking.visibility = View.GONE
             iconStatus.visibility = View.VISIBLE
@@ -227,6 +229,7 @@ class CheckUpdateActivity : BaseActivity() {
     }
 
     private fun showInstallingState() {
+        window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         with(binding) {
             layoutDownloadProgress.visibility = View.GONE
             progressChecking.visibility = View.GONE
@@ -246,6 +249,7 @@ class CheckUpdateActivity : BaseActivity() {
     }
 
     private fun showDownloadError() {
+        window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         with(binding) {
             layoutDownloadProgress.visibility = View.GONE
             btnDownload.visibility = View.VISIBLE
