@@ -272,6 +272,11 @@ class CheckUpdateActivity : BaseActivity() {
     private fun downloadAndInstall(downloadUrl: String, version: String) {
         try {
             val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+
+            // Clean old APKs from previous downloads
+            val downloadsDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+            downloadsDir?.listFiles()?.filter { it.name.endsWith(".apk") }?.forEach { it.delete() }
+
             val uri = Uri.parse(downloadUrl)
             val fileName = "AlfredoVPN_${version}.apk"
 
