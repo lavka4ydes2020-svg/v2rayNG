@@ -25,7 +25,11 @@ import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.UpdateCheckerManager
 import com.v2ray.ang.util.LogUtil
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -38,6 +42,7 @@ class CheckUpdateActivity : BaseActivity() {
     private var pendingDownloadId: Long = -1L
     private var pendingVersion: String? = null
     private var downloadPollingJob: Job? = null
+    private val downloadScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     // Launcher for install permission result
     private val installPermissionLauncher = registerForActivityResult(
@@ -80,6 +85,7 @@ class CheckUpdateActivity : BaseActivity() {
     override fun onDestroy() {
         super.onDestroy()
         downloadPollingJob?.cancel()
+        downloadScope.cancel()
     }
 
     private var pendingDownloadUrl: String? = null
@@ -296,7 +302,7 @@ class CheckUpdateActivity : BaseActivity() {
 
     private fun startDownloadPolling(dm: DownloadManager) {
         downloadPollingJob?.cancel()
-        downloadPollingJob = lifecycleScope.launch {
+        downloadPollingJob = downloadScope.launch {
             while (isActive) {
                 delay(300)
                 val cursor: Cursor = try {
