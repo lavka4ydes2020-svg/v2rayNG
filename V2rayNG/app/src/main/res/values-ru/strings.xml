@@ -410,7 +410,7 @@
     <string name="update_downloading_title">Загрузка обновления</string>
     <string name="update_downloading_subtitle">Пожалуйста, не закрывайте приложение</string>
     <string name="update_download_starting">Подготовка загрузки…</string>
-    <string name="update_download_indeterminate">Скачано %.1f МБ…</string>
+    <string name="update_download_indeterminate">Скачано %s МБ…</string>
     <string name="update_download_progress_format">%d%% (%.1f / %.1f МБ)</string>
     <string name="update_installing">Установка…</string>
     <string name="update_download_failed">Ошибка загрузки</string>

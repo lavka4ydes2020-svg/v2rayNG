@@ -210,8 +210,8 @@ class CheckUpdateActivity : BaseActivity() {
                 tvDownloadProgress.text = getString(
                     R.string.update_download_progress_format,
                     percent,
-                    String.format("%.1f", mbDownloaded),
-                    String.format("%.1f", mbTotal)
+                    mbDownloaded,
+                    mbTotal
                 )
             }
         }

@@ -413,7 +413,7 @@
     <string name="update_downloading_title">Downloading update</string>
     <string name="update_downloading_subtitle">Please keep the app open</string>
     <string name="update_download_starting">Preparing download…</string>
-    <string name="update_download_indeterminate">Downloaded %.1f MB…</string>
+    <string name="update_download_indeterminate">Downloaded %s MB…</string>
     <string name="update_download_progress_format">%d%% (%.1f / %.1f MB)</string>
     <string name="update_installing">Installing…</string>
     <string name="update_download_failed">Download failed</string>
