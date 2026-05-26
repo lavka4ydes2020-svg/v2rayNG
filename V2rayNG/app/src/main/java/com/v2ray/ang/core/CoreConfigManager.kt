@@ -882,6 +882,15 @@ object CoreConfigManager {
             MmkvManager.decodeSettingsString(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY)
                 ?: "AsIs"
 
+        // Block QUIC/HTTP3 to force fallback to TCP through the tunnel
+        v2rayConfig.routing.rules.add(
+            V2rayConfig.RoutingBean.RulesBean(
+                type = "field",
+                protocol = arrayListOf("quic"),
+                outboundTag = AppConfig.TAG_BLOCKED,
+            )
+        )
+
         val rulesetItems = MmkvManager.decodeRoutingRulesets()
         rulesetItems?.forEach { key ->
             appendRoutingUserRule(configContext, key, v2rayConfig, policyGroupBalancerTags)
