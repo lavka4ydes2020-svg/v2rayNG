@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.Settings
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -182,8 +183,9 @@ class CheckUpdateActivity : BaseActivity() {
             tvChangelog.visibility = View.GONE
             btnDownload.visibility = View.GONE
             layoutDownloadProgress.visibility = View.VISIBLE
+            progressDownload.isIndeterminate = true
             progressDownload.progress = 0
-            tvDownloadProgress.text = "0%"
+            tvDownloadProgress.text = getString(R.string.update_download_starting)
             cardStatus.setCardBackgroundColor(
                 ContextCompat.getColor(this@CheckUpdateActivity, R.color.update_card_amber)
             )
@@ -192,15 +194,26 @@ class CheckUpdateActivity : BaseActivity() {
 
     private fun updateDownloadProgress(percent: Int, bytesDownloaded: Long, totalBytes: Long) {
         with(binding) {
-            progressDownload.progress = percent
-            val mbDownloaded = bytesDownloaded / (1024.0 * 1024.0)
-            val mbTotal = totalBytes / (1024.0 * 1024.0)
-            tvDownloadProgress.text = getString(
-                R.string.update_download_progress_format,
-                percent,
-                String.format("%.1f", mbDownloaded),
-                String.format("%.1f", mbTotal)
-            )
+            if (percent < 0) {
+                // Size not yet known — indeterminate spinner
+                progressDownload.isIndeterminate = true
+                val mbDownloaded = bytesDownloaded / (1024.0 * 1024.0)
+                tvDownloadProgress.text = getString(
+                    R.string.update_download_indeterminate,
+                    String.format("%.1f", mbDownloaded)
+                )
+            } else {
+                progressDownload.isIndeterminate = false
+                progressDownload.progress = percent
+                val mbDownloaded = bytesDownloaded / (1024.0 * 1024.0)
+                val mbTotal = totalBytes / (1024.0 * 1024.0)
+                tvDownloadProgress.text = getString(
+                    R.string.update_download_progress_format,
+                    percent,
+                    String.format("%.1f", mbDownloaded),
+                    String.format("%.1f", mbTotal)
+                )
+            }
         }
     }
 
@@ -306,6 +319,9 @@ class CheckUpdateActivity : BaseActivity() {
                             if (totalBytes > 0) {
                                 val percent = ((bytesDownloaded * 100) / totalBytes).toInt()
                                 updateDownloadProgress(percent, bytesDownloaded, totalBytes)
+                            } else {
+                                // Total size not yet known — show indeterminate
+                                updateDownloadProgress(-1, bytesDownloaded, 0)
                             }
                         }
                     }
@@ -325,6 +341,19 @@ class CheckUpdateActivity : BaseActivity() {
                 LogUtil.e(AppConfig.TAG, "Downloaded APK not found: ${file.absolutePath}")
                 toastError(getString(R.string.toast_failure))
                 return
+            }
+
+            // Check install permission
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (!packageManager.canRequestPackageInstalls()) {
+                    toast(R.string.update_allow_install_unknown)
+                    val settingsIntent = Intent(
+                        Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                        Uri.parse("package:${BuildConfig.APPLICATION_ID}")
+                    )
+                    startActivity(settingsIntent)
+                    return
+                }
             }
 
             val fileProviderUri = FileProvider.getUriForFile(

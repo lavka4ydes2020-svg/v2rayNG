@@ -409,10 +409,13 @@
     <string name="update_download_started">Загрузка начата</string>
     <string name="update_downloading_title">Загрузка обновления</string>
     <string name="update_downloading_subtitle">Пожалуйста, не закрывайте приложение</string>
+    <string name="update_download_starting">Подготовка загрузки…</string>
+    <string name="update_download_indeterminate">Скачано %.1f МБ…</string>
     <string name="update_download_progress_format">%d%% (%.1f / %.1f МБ)</string>
     <string name="update_installing">Установка…</string>
     <string name="update_download_failed">Ошибка загрузки</string>
     <string name="update_tap_retry">Нажмите «Скачать» чтобы попробовать снова</string>
+    <string name="update_allow_install_unknown">Разрешите установку из неизвестных источников для Alfredo VPN</string>
     <string name="update_checking_title">Проверка обновлений…</string>
     <string name="update_checking_subtitle">Ищем новую версию на GitHub</string>
     <string name="update_up_to_date">Актуальная версия</string>
