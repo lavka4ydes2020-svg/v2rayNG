@@ -105,12 +105,6 @@ class MainActivity : HelperBaseActivity() {
         binding.cardQuickAbout.setOnClickListener {
             requestActivityLauncher.launch(Intent(this, AboutActivity::class.java))
         }
-        binding.cardQuickUpdate.setOnClickListener {
-            requestActivityLauncher.launch(Intent(this, CheckUpdateActivity::class.java))
-        }
-        binding.cardQuickStats.setOnClickListener {
-            requestActivityLauncher.launch(Intent(this, LogcatActivity::class.java))
-        }
 
         // "Change server" link
         binding.btnChangeServerLink.setOnClickListener {

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Alfredo VPN — Improved Main Screen</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #F0F2F5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.phone {
+  width: 360px;
+  height: 720px;
+  background: #F0F2F5;
+  border-radius: 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  box-shadow: 0 0 60px rgba(0,0,0,0.15);
+  scrollbar-width: none;
+}
+.phone::-webkit-scrollbar { display: none; }
+
+/* HEADER SECTION */
+.header-section {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%);
+  padding: 12px 20px 16px;
+  position: relative;
+}
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.app-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1A1A2E;
+}
+.header-icons { display: flex; gap: 8px; }
+.icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #F3F4F6;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  border: none;
+  font-size: 16px;
+}
+.subtitle {
+  text-align: center;
+  font-size: 12px;
+  color: #9CA3AF;
+  margin-top: 4px;
+}
+
+/* STATUS BADGE */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 10px auto 0;
+  transition: all 0.4s ease;
+}
+.status-badge.disconnected { background: #FEE2E2; color: #DC2626; }
+.status-badge.connecting { background: #FEF3C7; color: #D97706; animation: badgePulse 1.2s ease-in-out infinite; }
+.status-badge.connected { background: #D1FAE5; color: #059669; }
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status-badge.connecting .status-dot { animation: dotPulse 0.8s ease-in-out infinite; }
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* TOGGLE BUTTON */
+.toggle-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+.toggle-btn {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  color: white;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+.toggle-btn:active { transform: scale(0.9); }
+.toggle-btn.off {
+  background: radial-gradient(circle at 30% 30%, #9CA3AF, #6B7280);
+}
+.toggle-btn.connecting {
+  background: radial-gradient(circle at 30% 30%, #FBBF24, #D97706);
+  animation: connectPulse 1s ease-in-out infinite;
+}
+.toggle-btn.on {
+  background: radial-gradient(circle at 30% 30%, #34D399, #059669);
+}
+@keyframes connectPulse {
+  0%, 100% { box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3); }
+  50% { box-shadow: 0 4px 24px rgba(217, 119, 6, 0.5); }
+}
+.toggle-label {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin-top: 8px;
+}
+
+/* STATS ROW */
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 12px;
+}
+.stat-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 70px;
+}
+.stat-icon {
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.stat-label {
+  font-size: 10px;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stat-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #374151;
+  margin-top: 1px;
+  transition: color 0.3s ease;
+}
+.stat-value.active { color: #059669; }
+.stat-value.warning { color: #D97706; }
+.stat-value.critical { color: #DC2626; }
+
+/* SERVER CARD */
+.server-section {
+  padding: 8px 16px 0;
+}
+.server-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.server-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.change-btn {
+  font-size: 12px;
+  font-weight: 700;
+  color: #059669;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.change-btn:hover { background: #D1FAE5; }
+.server-card {
+  background: white;
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.server-flag {
+  width: 42px; height: 42px;
+  background: #F3F4F6;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.server-info { flex: 1; }
+.server-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+.server-detail {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin-top: 2px;
+}
+.ping-badge {
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+.ping-badge.good { background: #D1FAE5; color: #059669; }
+.ping-badge.ok { background: #FEF3C7; color: #D97706; }
+.ping-badge.poor { background: #FEE2E2; color: #DC2626; }
+
+/* QUICK ACTIONS */
+.qa-section { padding: 8px 16px; }
+.qa-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.qa-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.qa-card {
+  background: white;
+  border-radius: 12px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: none;
+  font-family: inherit;
+}
+.qa-card:active { transform: scale(0.96); box-shadow: 0 0 0 rgba(0,0,0,0); }
+.qa-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.qa-icon.blue { background: #DBEAFE; }
+.qa-icon.blue .icon-inner { color: #2563EB; }
+.qa-icon.purple { background: #EDE9FE; }
+.qa-icon.purple .icon-inner { color: #7C3AED; }
+.qa-icon.amber { background: #FEF3C7; }
+.qa-icon.amber .icon-inner { color: #D97706; }
+.qa-icon.emerald { background: #D1FAE5; }
+.qa-icon.emerald .icon-inner { color: #059669; }
+.qa-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* FOOTER */
+.footer {
+  padding: 12px 16px 24px;
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+}
+.footer-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+}
+.footer-icon {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: #F3F4F6;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.footer-label {
+  font-size: 10px;
+  color: #6B7280;
+}
+
+/* MODE SWITCHER */
+.mode-bar {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 16px 4px;
+}
+.mode-btn {
+  padding: 4px 12px;
+  border-radius: 14px;
+  border: 1px solid #E5E7EB;
+  background: white;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mode-btn.active {
+  background: #1A1A2E;
+  color: white;
+  border-color: #1A1A2E;
+}
+</style>
+</head>
+<body>
+
+<div class="phone" id="app">
+  <!-- HEADER -->
+  <div class="header-section">
+    <div class="header-row">
+      <span class="app-title">Alfredo VPN</span>
+      <div class="header-icons">
+        <button class="icon-btn" title="Per-app">📱</button>
+        <button class="icon-btn" title="Settings">⚙️</button>
+      </div>
+    </div>
+    <div class="subtitle">Ваше приватное подключение</div>
+
+    <!-- Status badge -->
+    <div style="text-align:center">
+      <span class="status-badge disconnected" id="statusBadge">
+        <span class="status-dot"></span> Нет соединения
+      </span>
+    </div>
+
+    <!-- Toggle -->
+    <div class="toggle-wrap">
+      <button class="toggle-btn off" id="toggleBtn" onclick="toggleVPN()">
+        ▶
+      </button>
+      <div class="toggle-label" id="toggleLabel">Нажмите для подключения</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-col">
+        <span class="stat-icon">📥</span>
+        <span class="stat-label">Загрузка</span>
+        <span class="stat-value" id="statDown">—</span>
+      </div>
+      <div class="stat-col">
+        <span class="stat-icon">📤</span>
+        <span class="stat-label">Отдача</span>
+        <span class="stat-value" id="statUp">—</span>
+      </div>
+      <div class="stat-col">
+        <span class="stat-icon">⏱</span>
+        <span class="stat-label">Задержка</span>
+        <span class="stat-value" id="statPing">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERVER CARD -->
+  <div class="server-section">
+    <div class="server-label-row">
+      <span class="server-label">Текущий сервер</span>
+      <button class="change-btn">Сменить</button>
+    </div>
+    <div class="server-card">
+      <div class="server-flag">🇩🇪</div>
+      <div class="server-info">
+        <div class="server-name">Германия — Premium</div>
+        <div class="server-detail">79.137.202.148 • VLESS+Reality</div>
+      </div>
+      <span class="ping-badge good" id="pingBadge">36 мс</span>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="qa-section">
+    <div class="qa-label">Быстрый доступ</div>
+    <div class="qa-grid">
+      <button class="qa-card">
+        <div class="qa-icon blue"><span class="icon-inner">📱</span></div>
+        <span class="qa-text">Выбор<br>приложений</span>
+      </button>
+      <button class="qa-card">
+        <div class="qa-icon amber"><span class="icon-inner">ℹ️</span></div>
+        <span class="qa-text">О приложении</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mode switcher (for preview) -->
+  <div class="mode-bar">
+    <button class="mode-btn active" onclick="setState('disconnected')">Отключено</button>
+    <button class="mode-btn" onclick="setState('connecting')">Подключение</button>
+    <button class="mode-btn" onclick="setState('connected')">Подключено</button>
+  </div>
+</div>
+
+<script>
+let currentState = 'disconnected';
+let trafficInterval = null;
+
+function setState(state) {
+  currentState = state;
+  const badge = document.getElementById('statusBadge');
+  const btn = document.getElementById('toggleBtn');
+  const label = document.getElementById('toggleLabel');
+  const pingBadge = document.getElementById('pingBadge');
+  const statDown = document.getElementById('statDown');
+  const statUp = document.getElementById('statUp');
+  const statPing = document.getElementById('statPing');
+
+  // Update mode buttons
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  event?.target?.classList.add('active');
+
+  // Clear traffic simulation
+  if (trafficInterval) { clearInterval(trafficInterval); trafficInterval = null; }
+
+  switch(state) {
+    case 'disconnected':
+      badge.className = 'status-badge disconnected';
+      badge.innerHTML = '<span class="status-dot"></span> Нет соединения';
+      btn.className = 'toggle-btn off';
+      btn.innerHTML = '▶';
+      label.textContent = 'Нажмите для подключения';
+      statDown.textContent = '—';
+      statDown.className = 'stat-value';
+      statUp.textContent = '—';
+      statUp.className = 'stat-value';
+      statPing.textContent = '—';
+      statPing.className = 'stat-value';
+      pingBadge.textContent = '—';
+      pingBadge.className = 'ping-badge';
+      break;
+
+    case 'connecting':
+      badge.className = 'status-badge connecting';
+      badge.innerHTML = '<span class="status-dot"></span> Подключается…';
+      btn.className = 'toggle-btn connecting';
+      btn.innerHTML = '✓';
+      label.textContent = 'Установка соединения';
+      statDown.textContent = '—';
+      statDown.className = 'stat-value';
+      statUp.textContent = '—';
+      statUp.className = 'stat-value';
+      statPing.textContent = '…';
+      statPing.className = 'stat-value';
+      pingBadge.textContent = '…';
+      pingBadge.className = 'ping-badge';
+      break;
+
+    case 'connected':
+      badge.className = 'status-badge connected';
+      badge.innerHTML = '<span class="status-dot"></span> Подключено';
+      btn.className = 'toggle-btn on';
+      btn.innerHTML = '✓';
+      label.textContent = 'Нажмите для отключения';
+      pingBadge.textContent = '36 мс';
+      pingBadge.className = 'ping-badge good';
+      statPing.textContent = '36 мс';
+      statPing.className = 'stat-value active';
+
+      // Simulate live traffic
+      simulateTraffic();
+      break;
+  }
+}
+
+function simulateTraffic() {
+  const down = document.getElementById('statDown');
+  const up = document.getElementById('statUp');
+  let bytes = 0;
+  trafficInterval = setInterval(() => {
+    bytes += Math.random() * 500000;
+    const speed = bytes / 3; // bytes per 3 seconds
+    if (speed > 1e6) {
+      down.textContent = (speed / 1e6).toFixed(1) + ' MB/s';
+    } else if (speed > 1e3) {
+      down.textContent = (speed / 1e3).toFixed(0) + ' KB/s';
+    } else {
+      down.textContent = speed.toFixed(0) + ' B/s';
+    }
+    down.className = 'stat-value active';
+
+    const upSpeed = speed * (0.3 + Math.random() * 0.4);
+    if (upSpeed > 1e6) {
+      up.textContent = (upSpeed / 1e6).toFixed(1) + ' MB/s';
+    } else if (upSpeed > 1e3) {
+      up.textContent = (upSpeed / 1e3).toFixed(0) + ' KB/s';
+    } else {
+      up.textContent = upSpeed.toFixed(0) + ' B/s';
+    }
+    up.className = 'stat-value active';
+  }, 3000);
+}
+
+function toggleVPN() {
+  if (currentState === 'disconnected') {
+    setState('connecting');
+    setTimeout(() => setState('connected'), 2000);
+  } else if (currentState === 'connected') {
+    setState('disconnected');
+  }
+}
+</script>
+</body>
+</html>
