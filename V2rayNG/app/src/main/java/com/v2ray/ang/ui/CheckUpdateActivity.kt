@@ -195,10 +195,9 @@ class CheckUpdateActivity : BaseActivity() {
                 .setTitle("Alfredo VPN $version")
                 .setDescription(getString(R.string.update_downloading))
                 .setNotificationVisibility(
-                    DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+                    DownloadManager.Request.VISIBILITY_VISIBLE
                 )
-                .setDestinationInExternalFilesDir(
-                    this,
+                .setDestinationInExternalPublicDir(
                     Environment.DIRECTORY_DOWNLOADS,
                     fileName
                 )
@@ -206,7 +205,7 @@ class CheckUpdateActivity : BaseActivity() {
 
             pendingDownloadId = dm.enqueue(request)
             pendingVersion = version
-            toast(R.string.update_download_started)
+            toast(R.string.update_download_started_tap_notification)
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Failed to start download: ${e.message}")
             toastError(e.message ?: getString(R.string.toast_failure))
@@ -216,8 +215,10 @@ class CheckUpdateActivity : BaseActivity() {
     private fun installApk() {
         try {
             val version = pendingVersion ?: return
-            val downloadsDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
-            val file = File(downloadsDir, "AlfredoVPN_${version}.apk")
+            val file = File(
+                Environment.getExternalStoragePublicDir(Environment.DIRECTORY_DOWNLOADS),
+                "AlfredoVPN_${version}.apk"
+            )
             if (!file.exists()) {
                 LogUtil.e(AppConfig.TAG, "Downloaded APK not found: ${file.absolutePath}")
                 toastError(getString(R.string.toast_failure))

@@ -410,6 +410,7 @@
     <string name="update_auto_check">Auto-check at startup</string>
     <string name="update_downloading">Downloading update…</string>
     <string name="update_download_started">Download started</string>
+    <string name="update_download_started_tap_notification">Download started. Tap the notification when complete to install.</string>
     <string name="update_checking_title">Checking for updates…</string>
     <string name="update_checking_subtitle">Looking for new version on GitHub</string>
     <string name="update_up_to_date">Up to date</string>

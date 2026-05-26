@@ -407,6 +407,7 @@
     <string name="update_auto_check">Проверять при запуске</string>
     <string name="update_downloading">Скачивание обновления…</string>
     <string name="update_download_started">Загрузка начата</string>
+    <string name="update_download_started_tap_notification">Загрузка началась. По завершении нажмите на уведомление для установки.</string>
     <string name="update_checking_title">Проверка обновлений…</string>
     <string name="update_checking_subtitle">Ищем новую версию на GitHub</string>
     <string name="update_up_to_date">Актуальная версия</string>
