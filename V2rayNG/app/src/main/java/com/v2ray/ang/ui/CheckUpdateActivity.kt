@@ -197,7 +197,8 @@ class CheckUpdateActivity : BaseActivity() {
                 .setNotificationVisibility(
                     DownloadManager.Request.VISIBILITY_VISIBLE
                 )
-                .setDestinationInExternalPublicDir(
+                .setDestinationInExternalFilesDir(
+                    this,
                     Environment.DIRECTORY_DOWNLOADS,
                     fileName
                 )
@@ -215,10 +216,8 @@ class CheckUpdateActivity : BaseActivity() {
     private fun installApk() {
         try {
             val version = pendingVersion ?: return
-            val file = File(
-                Environment.getExternalStoragePublicDir(Environment.DIRECTORY_DOWNLOADS),
-                "AlfredoVPN_${version}.apk"
-            )
+            val downloadsDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+            val file = File(downloadsDir, "AlfredoVPN_${version}.apk")
             if (!file.exists()) {
                 LogUtil.e(AppConfig.TAG, "Downloaded APK not found: ${file.absolutePath}")
                 toastError(getString(R.string.toast_failure))
