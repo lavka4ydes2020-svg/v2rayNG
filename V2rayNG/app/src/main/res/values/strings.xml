@@ -560,4 +560,10 @@
     <string name="quick_update">Check Update</string>
     <string name="quick_statistics">Statistics</string>
 
+    <!-- About page -->
+    <string name="about_telegram">Telegram-канал</string>
+    <string name="about_check_update">Проверить обновление</string>
+    <string name="about_logcat">Журнал</string>
+    <string name="about_footer">Alfredo VPN %s developed by Khabib</string>
+
 </resources>
