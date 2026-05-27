@@ -271,11 +271,12 @@ class MainActivity : HelperBaseActivity() {
 
     /**
      * Detect country flag from server address.
-     * Current VPS is in Germany (79.137.202.148). Falls back to globe emoji.
+     * VPS servers: Sweden (89.127.222.101) primary; Germany (79.137.202.148) fallback.
      */
     private fun getFlagForServer(address: String?): String {
         if (address.isNullOrEmpty()) return "\uD83C\uDF10"
         return when {
+            address.contains("89.127") || address.contains("fornex") -> "🇸🇪" // Sweden
             address.contains("79.137") || address.contains("aeza") -> "\uD83C\uDDE9\uD83C\uDDEA" // Germany
             address.contains("ru") || address.contains("mos") -> "\uD83C\uDDF7\uD83C\uDDFA" // Russia
             address.contains("nl") || address.contains("neth") -> "\uD83C\uDDF3\uD83C\uDDF1" // Netherlands
@@ -294,6 +295,7 @@ class MainActivity : HelperBaseActivity() {
     private fun getCountryNameForServer(address: String?): String {
         if (address.isNullOrEmpty()) return "Сервер"
         return when {
+            address.contains("89.127") || address.contains("fornex") -> "Швеция"
             address.contains("79.137") || address.contains("aeza") -> "Германия"
             address.contains("ru") || address.contains("mos") -> "Россия"
             address.contains("nl") || address.contains("neth") -> "Нидерланды"

@@ -15,6 +15,7 @@ class AngApplication : MultiDexApplication() {
     companion object {
         lateinit var application: AngApplication
         private const val PREF_PREINSTALLED_SERVER = "pref_preinstalled_server"
+        private const val PREF_PREINSTALLED_SERVER_SE = "pref_preinstalled_server_se"
     }
 
     /**
@@ -49,7 +50,7 @@ class AngApplication : MultiDexApplication() {
         SettingsManager.setNightMode()
 
         // Install pre-configured server profile on first launch
-        installDefaultServer()
+        installDefaultServers()
 
         es.dmoral.toasty.Toasty.Config.getInstance()
             .setGravity(android.view.Gravity.BOTTOM, 0, 300)
@@ -60,29 +61,40 @@ class AngApplication : MultiDexApplication() {
      * Installs the default VLESS+Reality server profile on first app launch.
      * Parses the VLESS link and saves it as a pre-installed server.
      */
-    private fun installDefaultServer() {
-        if (MmkvManager.decodeSettingsBool(PREF_PREINSTALLED_SERVER, false)) {
-            return // Already installed
+    private fun installDefaultServers() {
+        // Germany server (AEZA) — fallback
+        if (!MmkvManager.decodeSettingsBool(PREF_PREINSTALLED_SERVER, false)) {
+            installVlessProfile(
+                "vless://6f168bb6-cbf3-4c9d-b60f-d6873a216e42@79.137.202.148:443?encryption=none&security=reality&sni=www.bing.com&fp=chrome&pbk=tBXxynar6xznGkpe8wPPYgF43hfg1k5wo7eUIXnDFA4&sid=912b3d132f4e9fbb&type=tcp&flow=xtls-rprx-vision#Alfredo-VPN-DE",
+                PREF_PREINSTALLED_SERVER,
+                select = false
+            )
         }
 
-        try {
-            val vlessLink = "vless://6f168bb6-cbf3-4c9d-b60f-d6873a216e42@79.137.202.148:443?encryption=none&security=reality&sni=www.bing.com&fp=chrome&pbk=tBXxynar6xznGkpe8wPPYgF43hfg1k5wo7eUIXnDFA4&sid=912b3d132f4e9fbb&type=tcp&flow=xtls-rprx-vision#Alfredo-VPN"
+        // Sweden server (Fornex) — primary
+        if (!MmkvManager.decodeSettingsBool(PREF_PREINSTALLED_SERVER_SE, false)) {
+            installVlessProfile(
+                "vless://a1161024-5858-4301-812d-afe497d880db@89.127.222.101:443?encryption=none&security=reality&sni=www.microsoft.com&fp=chrome&pbk=5gTR708j2tM8N258ibiQPesNKSBosS6-dE1ew467_Ao&sid=a5a77ccb14e3dc25&type=tcp&flow=xtls-rprx-vision#Alfredo-VPN-SE",
+                PREF_PREINSTALLED_SERVER_SE,
+                select = true
+            )
+        }
+    }
 
+    private fun installVlessProfile(vlessLink: String, flagKey: String, select: Boolean) {
+        try {
             val profile = VlessFmt.parse(vlessLink) ?: return
             profile.subscriptionId = AppConfig.DEFAULT_SUBSCRIPTION_ID
-
-            // Save the profile
             val guid = MmkvManager.encodeServerConfig("", profile)
 
-            // Select it as the current server
-            MmkvManager.setSelectServer(guid)
+            if (select) {
+                MmkvManager.setSelectServer(guid)
+            }
 
-            // Mark as installed
-            MmkvManager.encodeSettings(PREF_PREINSTALLED_SERVER, true)
-
-            android.util.Log.i(AppConfig.TAG, "Pre-installed Alfredo VPN server profile added successfully")
+            MmkvManager.encodeSettings(flagKey, true)
+            android.util.Log.i(AppConfig.TAG, "Pre-installed profile: " + profile.remarks)
         } catch (e: Exception) {
-            android.util.Log.e(AppConfig.TAG, "Failed to install default server profile", e)
+            android.util.Log.e(AppConfig.TAG, "Failed to install profile", e)
         }
     }
 }

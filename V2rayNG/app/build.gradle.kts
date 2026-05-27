@@ -21,8 +21,8 @@ android {
         applicationId = "com.alfredovpn"
         minSdk = 24
         targetSdk = 37
-        versionCode = 756
-        versionName = "2.2.26"
+        versionCode = 758
+        versionName = "2.2.28"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
