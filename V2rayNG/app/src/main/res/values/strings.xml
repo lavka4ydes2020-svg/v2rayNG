@@ -582,6 +582,7 @@
     <string name="pref_auto_start_label">Auto-start on boot</string>
     <string name="pref_kill_switch_label">Kill Switch</string>
     <string name="pref_dark_theme_label">Dark theme</string>
+    <string name="lang_auto">System</string>
     <string name="pref_language_label">Language</string>
 
     <!-- Minimalist Home -->

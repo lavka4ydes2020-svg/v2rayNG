@@ -24,6 +24,7 @@ import com.v2ray.ang.R
 import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.databinding.ActivityMainBinding
 import com.v2ray.ang.enums.EConfigType
+import com.v2ray.ang.enums.Language
 import com.v2ray.ang.enums.PermissionType
 import com.v2ray.ang.extension.toSpeedString
 import com.v2ray.ang.extension.toTrafficString
@@ -207,10 +208,26 @@ class MainActivity : HelperBaseActivity() {
         // Language selector
         val langBtn = sheetView.findViewById<View>(R.id.sheet_language)
         langBtn?.setOnClickListener {
-            dialog.dismiss()
-            // Launch language settings — open full settings at the UI section
-            val intent = Intent(this, SettingsActivity::class.java)
-            requestActivityLauncher.launch(intent)
+            val currentLang = MmkvManager.decodeSettingsString(AppConfig.PREF_LANGUAGE) ?: Language.RUSSIAN.code
+            val languages = listOf(
+                Language.AUTO to getString(R.string.lang_auto),
+                Language.ENGLISH to "English",
+                Language.RUSSIAN to "Русский"
+            )
+            val names = languages.map { it.second }.toTypedArray()
+            val checkedIndex = languages.indexOfFirst { it.first.code == currentLang }.coerceAtLeast(0)
+
+            AlertDialog.Builder(this)
+                .setTitle(R.string.pref_language_label)
+                .setSingleChoiceItems(names, checkedIndex) { dlg, which ->
+                    val selected = languages[which].first
+                    MmkvManager.encodeSettings(AppConfig.PREF_LANGUAGE, selected.code)
+                    dlg.dismiss()
+                    dialog.dismiss()
+                    recreate()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
         }
 
         // Advanced settings button — show warning first

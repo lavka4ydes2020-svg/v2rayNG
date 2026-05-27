@@ -100,8 +100,7 @@
         <CheckBox
             android:id="@+id/sheet_auto_start"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false" />
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
     <!-- Kill Switch toggle -->
@@ -141,8 +140,7 @@
         <CheckBox
             android:id="@+id/sheet_kill_switch"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false" />
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
     <!-- Always-on VPN toggle -->
@@ -182,8 +180,7 @@
         <CheckBox
             android:id="@+id/sheet_always_on_vpn"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false" />
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
     <!-- Dark theme toggle -->
@@ -223,8 +220,7 @@
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/sheet_dark_theme"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false" />
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
     <!-- Language -->
