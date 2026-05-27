@@ -159,6 +159,41 @@ class MainActivity : HelperBaseActivity() {
             }
         }
 
+        val alwaysOnVpn = sheetView.findViewById<android.widget.CheckBox>(R.id.sheet_always_on_vpn)
+        alwaysOnVpn?.isChecked = MmkvManager.decodeAlwaysOnVpn()
+        alwaysOnVpn?.setOnCheckedChangeListener { _, isChecked ->
+            MmkvManager.encodeAlwaysOnVpn(isChecked)
+            if (isChecked) {
+                // Show confirmation dialog before enabling system Always-on VPN
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.pref_always_on_vpn_label)
+                    .setMessage(R.string.always_on_vpn_confirm_message)
+                    .setPositiveButton(R.string.always_on_vpn_confirm_yes) { _, _ ->
+                        // VPN must be connected for Always-on to take effect
+                        if (CoreServiceManager.isRunning()) {
+                            // Open system VPN settings where user can toggle "Always-on VPN"
+                            startActivity(Intent(android.provider.Settings.ACTION_VPN_SETTINGS))
+                        } else {
+                            // VPN is not connected — show tip to connect first
+                            AlertDialog.Builder(this)
+                                .setTitle(R.string.always_on_vpn_not_connected_title)
+                                .setMessage(R.string.always_on_vpn_not_connected_message)
+                                .setPositiveButton(android.R.string.ok, null)
+                                .show()
+                        }
+                    }
+                    .setNegativeButton(R.string.always_on_vpn_confirm_no) { _, _ ->
+                        alwaysOnVpn?.isChecked = false
+                        MmkvManager.encodeAlwaysOnVpn(false)
+                    }
+                    .setOnCancelListener {
+                        alwaysOnVpn?.isChecked = false
+                        MmkvManager.encodeAlwaysOnVpn(false)
+                    }
+                    .show()
+            }
+        }
+
         val darkTheme = sheetView.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.sheet_dark_theme)
         darkTheme?.let {
             val currentMode = MmkvManager.decodeSettingsString(AppConfig.PREF_UI_MODE_NIGHT, "0")

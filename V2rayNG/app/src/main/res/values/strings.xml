@@ -182,6 +182,15 @@
     <string name="watchdog_always_on_button">Open System VPN Settings</string>
     <string name="watchdog_always_on_later">Later</string>
 
+    <!-- Always-on VPN settings -->
+    <string name="pref_always_on_vpn_label">Always-on VPN</string>
+    <string name="summary_pref_always_on_vpn">Keep VPN always connected. Block all traffic without VPN.</string>
+    <string name="always_on_vpn_confirm_message">This will enable Android\'s system-level Always-on VPN. When active:\n\n• VPN stays connected at all times\n• All traffic is blocked until VPN connects\n• Protects against leaks on boot and network changes\n\nYou can disable this anytime in system VPN settings.</string>
+    <string name="always_on_vpn_confirm_yes">Enable</string>
+    <string name="always_on_vpn_confirm_no">Cancel</string>
+    <string name="always_on_vpn_not_connected_title">VPN Not Connected</string>
+    <string name="always_on_vpn_not_connected_message">Connect to VPN first, then enable Always-on VPN.</string>
+
     <string name="menu_item_select_recommended">Recommended</string>
     <string name="recommended_apps_selected">Selected %1$d of %2$d recommended apps</string>
     <string name="per_app_proxy_description">Only selected apps use the VPN tunnel. All other apps connect directly.</string>

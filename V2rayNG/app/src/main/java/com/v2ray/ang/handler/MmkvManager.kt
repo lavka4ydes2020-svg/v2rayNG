@@ -4,6 +4,7 @@ import com.tencent.mmkv.MMKV
 import com.v2ray.ang.AppConfig.DEFAULT_SUBSCRIPTION_ID
 import com.v2ray.ang.AppConfig.PREF_IS_BOOTED
 import com.v2ray.ang.AppConfig.PREF_KILL_SWITCH
+import com.v2ray.ang.AppConfig.PREF_ALWAYS_ON_VPN
 import com.v2ray.ang.AppConfig.PREF_ROUTING_RULESET
 import com.v2ray.ang.dto.entities.AssetUrlCache
 import com.v2ray.ang.dto.entities.AssetUrlItem
@@ -727,6 +728,20 @@ object MmkvManager {
      */
     fun decodeKillSwitch(): Boolean {
         return decodeSettingsBool(PREF_KILL_SWITCH, false)
+    }
+
+    /**
+     * Encodes the Always-on VPN setting.
+     */
+    fun encodeAlwaysOnVpn(enabled: Boolean) {
+        encodeSettings(PREF_ALWAYS_ON_VPN, enabled)
+    }
+
+    /**
+     * Decodes the Always-on VPN setting.
+     */
+    fun decodeAlwaysOnVpn(): Boolean {
+        return decodeSettingsBool(PREF_ALWAYS_ON_VPN, false)
     }
 
     //endregion

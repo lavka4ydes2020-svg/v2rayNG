@@ -145,6 +145,47 @@
             android:clickable="false" />
     </LinearLayout>
 
+    <!-- Always-on VPN toggle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="2dp"
+        android:background="@drawable/sheet_item_bg"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pref_always_on_vpn_label"
+                android:textColor="#374151"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/summary_pref_always_on_vpn"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <CheckBox
+            android:id="@+id/sheet_always_on_vpn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="false" />
+    </LinearLayout>
+
     <!-- Dark theme toggle -->
     <LinearLayout
         android:layout_width="match_parent"

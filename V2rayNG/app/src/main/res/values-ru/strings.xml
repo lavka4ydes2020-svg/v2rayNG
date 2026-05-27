@@ -181,6 +181,15 @@
     <string name="watchdog_always_on_button">Открыть настройки VPN</string>
     <string name="watchdog_always_on_later">Позже</string>
 
+    <!-- Always-on VPN settings -->
+    <string name="pref_always_on_vpn_label">Always-on VPN</string>
+    <string name="summary_pref_always_on_vpn">VPN всегда включён. Блокировка трафика без VPN на уровне системы.</string>
+    <string name="always_on_vpn_confirm_message">Это включит системный Always-on VPN. Когда активно:\n\n• VPN всегда подключён\n• Трафик блокируется до поднятия VPN\n• Защита от утечек при загрузке и смене сети\n\nОтключить можно в любой момент в системных настройках VPN.</string>
+    <string name="always_on_vpn_confirm_yes">Включить</string>
+    <string name="always_on_vpn_confirm_no">Отмена</string>
+    <string name="always_on_vpn_not_connected_title">VPN не подключён</string>
+    <string name="always_on_vpn_not_connected_message">Сначала подключитесь к VPN, затем включите Always-on VPN.</string>
+
     <string name="menu_item_select_recommended">Рекомендуемые</string>
     <string name="recommended_apps_selected">Выбрано %1$d из %2$d рекомендуемых приложений</string>
     <string name="per_app_proxy_description">Только выбранные приложения используют VPN. Все остальные работают напрямую.</string>
