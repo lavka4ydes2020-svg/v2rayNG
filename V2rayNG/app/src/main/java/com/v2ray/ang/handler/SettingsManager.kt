@@ -476,7 +476,18 @@ object SettingsManager {
      * @return True if HEV TUN is used, false otherwise.
      */
     fun isUsingHevTun(): Boolean {
-        return MmkvManager.decodeSettingsBool(AppConfig.PREF_USE_HEV_TUNNEL, false)
+        if (!MmkvManager.decodeSettingsBool(AppConfig.PREF_USE_HEV_TUNNEL, false)) {
+            return false
+        }
+        // Verify the native library is actually available before entering HEV path
+        return try {
+            System.loadLibrary("hev-socks5-tunnel")
+            true
+        } catch (e: UnsatisfiedLinkError) {
+            // Library not available — disable HEV tunnel gracefully
+            MmkvManager.encodeSettings(AppConfig.PREF_USE_HEV_TUNNEL, false)
+            false
+        }
     }
 
     /**

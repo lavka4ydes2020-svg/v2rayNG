@@ -31,8 +31,14 @@ class TProxyService(
         @Suppress("FunctionName")
         private external fun TProxyGetStats(): LongArray?
 
-        init {
-            System.loadLibrary("hev-socks5-tunnel")
+        private var libraryLoaded = false
+
+        @Synchronized
+        private fun ensureLibraryLoaded() {
+            if (!libraryLoaded) {
+                System.loadLibrary("hev-socks5-tunnel")
+                libraryLoaded = true
+            }
         }
     }
 
@@ -51,6 +57,7 @@ class TProxyService(
 
         try {
 //            LogUtil.i(AppConfig.TAG, "TProxyStartService...")
+            ensureLibraryLoaded()
             TProxyStartService(configFile.absolutePath, vpnInterface.fd)
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "HevSocks5Tunnel exception: ${e.message}")
@@ -103,6 +110,7 @@ class TProxyService(
     override fun stopTun2Socks() {
         try {
             LogUtil.i(AppConfig.TAG, "TProxyStopService...")
+            ensureLibraryLoaded()
             TProxyStopService()
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Failed to stop hev-socks5-tunnel", e)
